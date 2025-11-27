@@ -611,7 +611,8 @@ function updateRibbonTrail(deltaMultiplier) {
 
     // Direction along the trail
     const dir = new THREE.Vector3().subVectors(pNext, pCurr);
-   let side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0));
+   let side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0,1,0));
+side.normalize();
     if (side.lengthSq() < 1e-6) {
       side.set(1, 0, 0); // fallback if fox is going perfectly straight
     } else {
@@ -1120,5 +1121,6 @@ window.addEventListener("load", () => {
   init();
   animate();
 });
+
 
 
