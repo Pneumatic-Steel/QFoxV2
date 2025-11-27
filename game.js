@@ -611,7 +611,7 @@ function updateRibbonTrail(deltaMultiplier) {
 
     // Direction along the trail
     const dir = new THREE.Vector3().subVectors(pNext, pCurr);
-    let side = new THREE.Vector3().crossVectors(laneDir, dir);
+   let side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0));
     if (side.lengthSq() < 1e-6) {
       side.set(1, 0, 0); // fallback if fox is going perfectly straight
     } else {
@@ -628,8 +628,8 @@ function updateRibbonTrail(deltaMultiplier) {
 
     // Push ribbon BEHIND the fox along +Z, stretching farther for tail
     const stretch = TRAIL_LENGTH * tSeg;
-    leftPos.y += (TRAIL_Z_OFFSET + stretch);
-    rightPos.y += (TRAIL_Z_OFFSET + stretch);
+    leftPos.z += (TRAIL_Z_OFFSET + stretch);
+    rightPos.z += (TRAIL_Z_OFFSET + stretch);
 
     const vi = i * 2;
 
@@ -1120,4 +1120,5 @@ window.addEventListener("load", () => {
   init();
   animate();
 });
+
 
