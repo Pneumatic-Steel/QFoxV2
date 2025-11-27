@@ -626,6 +626,10 @@ side.normalize();
 
     const leftPos = pCurr.clone().add(offset);
     const rightPos = pCurr.clone().sub(offset);
+     // pull the ribbon downward so it stands on the ground, not above fox
+leftPos.y  -= halfWidth;
+rightPos.y -= halfWidth;
+
 
     // Push ribbon BEHIND the fox along +Z, stretching farther for tail
     const stretch = TRAIL_LENGTH * tSeg;
@@ -1121,6 +1125,7 @@ window.addEventListener("load", () => {
   init();
   animate();
 });
+
 
 
 
