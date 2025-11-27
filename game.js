@@ -34,17 +34,11 @@ window.qfoxUserId = "Anonymous";
 
 /* Color schemes for floor & fog */
 const colorSchemes = [
-  // LEVEL 1 (Score 0-249): Dark Blue/Black
   { floor: new THREE.Color("#1f2937"), fog: new THREE.Color("#111827") }, // 0
-  // LEVEL 2 (Score 250-499): Vibrant Red
   { floor: new THREE.Color("#A01010"), fog: new THREE.Color("#FF0000") }, // 1
-  // LEVEL 3 (Score 500-749): Bright Green
   { floor: new THREE.Color("#008000"), fog: new THREE.Color("#00FF00") }, // 2
-  // LEVEL 4 (Score 750-999): Electric Blue
   { floor: new THREE.Color("#1010A0"), fog: new THREE.Color("#00FFFF") }, // 3
-  // LEVEL 5 (Score 1000-1249): Hot Pink/Magenta
   { floor: new THREE.Color("#A010A0"), fog: new THREE.Color("#FF00FF") }, // 4
-  // LEVEL 6 (Score 1250+): Orange/Gold
   { floor: new THREE.Color("#B8860B"), fog: new THREE.Color("#FF8C00") }  // 5
 ];
 
@@ -316,6 +310,16 @@ const BACKGROUND_VIDEO_URL = "assets/background.mp4";
 const MUSIC_URL = "assets/music.wav";
 
 /* ===========================
+   DIFFICULTY TUNING
+   =========================== */
+
+// Score-based exponential difficulty (Option B2)
+const MIN_GAME_SPEED = 0.22;     // slowest speed at score 0
+const MAX_GAME_SPEED = 1.35;     // max difficulty cap
+const DIFFICULTY_SCORE_TARGET = 1500; // score where difficulty "maxes out"
+const DIFFICULTY_EXPONENT = 1.4; // curves difficulty: >1 = slow start, sharp middle
+
+/* ===========================
    GLOBALS
    =========================== */
 
@@ -338,20 +342,20 @@ let lanePositions = [-3.5, 0, 3.5];
 let currentLane = 1;
 let obstacles = [];
 let obstacleSpawnTimer = 0;
-let gameSpeed = 0.25;
-const BASE_GAME_SPEED = 0.25;
-const SPEED_INCREASE_RATE = 0.0006;
+let gameSpeed = MIN_GAME_SPEED;
 let runningTime = 0;
 const FOX_BASE_HEIGHT = 1.2;
 let lastTime = performance.now();
 const TARGET_FPS = 60;
 const FRAME_TIME = 1000 / TARGET_FPS;
 let firstRun = true; // only first run can be started with any key/tap
+let lastSafeLane = 1; // used for fair spawn patterns
 
 const container = document.getElementById("game-container");
 const scoreDisplay = document.getElementById("score-display");
 const gameOverScreen = document.getElementById("game-over-screen");
 const finalScoreEl = document.getElementById("final-score");
+
 const textureLoader = new THREE.TextureLoader();
 textureLoader.setCrossOrigin("anonymous"); // CORS fix for all textures
 // === SECTION 2 / 4 ===
@@ -480,6 +484,7 @@ function createObstacle(laneIndex) {
   orb.userData.lane = laneIndex;
   orb.userData.billboard = true;
   orb.userData.halo = halo;
+  orb.userData.scored = false;
 
   textureLoader.load(
     OBSTACLE_URL,
@@ -507,8 +512,8 @@ function createObstacle(laneIndex) {
 
 // These are tuned so the trail is behind the fox, not too wide, and smooth.
 const TRAIL_SEGMENTS = 40;      // how many points (more = smoother)
-const TRAIL_BASE_WIDTH = 0.9;   // narrower max width at the fox (was 1.6)
-const TRAIL_MIN_WIDTH = 0.05;   // narrower tail width (was 0.12)
+const TRAIL_BASE_WIDTH = 0.9;   // narrower max width at the fox
+const TRAIL_MIN_WIDTH = 0.05;   // narrower tail width
 const TRAIL_SMOOTH = 0.28;      // smoothing factor for internal bending
 const TRAIL_Z_OFFSET = 1.2;     // base offset behind fox along +Z
 const TRAIL_Y_OFFSET = 0.4;     // lift ribbon slightly above the floor
@@ -596,7 +601,6 @@ function updateRibbonTrail(deltaMultiplier) {
   const colB = reverseColorSchemes[nextIndex].floor;
   const headColor = colA.clone().lerp(colB, t);
 
-  // We use lane direction and curve direction to compute sideways vector
   const laneDir = new THREE.Vector3(0, 0, 1);
 
   for (let i = 0; i < TRAIL_SEGMENTS - 1; i++) {
@@ -702,8 +706,9 @@ function startGame() {
 
   gameActive = true;
   score = 0;
-  gameSpeed = BASE_GAME_SPEED;
+  gameSpeed = MIN_GAME_SPEED;
   currentLane = 1;
+  lastSafeLane = 1;
 
   if (foxPlayer) foxPlayer.position.x = lanePositions[currentLane];
 
@@ -751,13 +756,80 @@ function moveFox(newLane) {
     .start();
 }
 
+/* ===========================
+   SPAWN PATTERN (FAIRNESS)
+   =========================== */
+
+// Medium difficulty spawn logic (S2):
+// - Sometimes 1 orb, sometimes 2 orbs
+// - Never 3 orbs (no impossible walls)
+// - Always at least 1 safe lane
+// - Tries to keep safe lane within 1 lane-step of previous safe lane
+
+function chooseSpawnPattern(difficultyFactor) {
+  const allLanes = [0, 1, 2];
+
+  // chance of double-orb spawns increases with difficulty
+  const chanceDouble = 0.2 + difficultyFactor * 0.55; // 0.2 → 0.75
+
+  let patterns;
+  if (Math.random() < chanceDouble) {
+    // double-lane blocks (leave 1 safe lane)
+    patterns = [
+      [0, 1],
+      [1, 2],
+      [0, 2],
+    ];
+  } else {
+    // single orb spawns (2 safe lanes)
+    patterns = [
+      [0],
+      [1],
+      [2],
+    ];
+  }
+
+  // Filter patterns so new safe lane is close to lastSafeLane when possible
+  const viable = patterns.filter((blocked) => {
+    const safe = allLanes.filter((l) => !blocked.includes(l));
+    // Require at least one safe lane within 1 step of lastSafeLane
+    return safe.some((l) => Math.abs(l - lastSafeLane) <= 1);
+  });
+
+  const chosenSet = (viable.length > 0 ? viable : patterns);
+  const blocked = chosenSet[Math.floor(Math.random() * chosenSet.length)];
+
+  const safe = allLanes.filter((l) => !blocked.includes(l));
+  if (safe.length > 0) {
+    // choose the safe lane closest to the previous safe lane as the "flow lane"
+    safe.sort((a, b) => Math.abs(a - lastSafeLane) - Math.abs(b - lastSafeLane));
+    lastSafeLane = safe[0];
+  }
+
+  return blocked;
+}
+
+/* ===========================
+   OBSTACLE UPDATE / DIFFICULTY / COLLISION / SCORING
+   =========================== */
+
 function updateObstacles(deltaMultiplier) {
   if (!foxPlayer) return;
 
-  gameSpeed += SPEED_INCREASE_RATE * deltaMultiplier;
+  // Score-based exponential difficulty (Option B2)
+  const rawFactor = score / DIFFICULTY_SCORE_TARGET;
+  const difficultyFactor = Math.min(Math.pow(rawFactor, DIFFICULTY_EXPONENT), 1);
+  gameSpeed = MIN_GAME_SPEED + (MAX_GAME_SPEED - MIN_GAME_SPEED) * difficultyFactor;
 
+  const foxPos = foxPlayer.position;
+  const collisionRadius = 1.05;
+  const collisionRadiusSq = collisionRadius * collisionRadius;
+
+  // Move obstacles + collision + scoring
   for (let i = obstacles.length - 1; i >= 0; i--) {
     const obs = obstacles[i];
+
+    // Move forward (toward the camera/player)
     obs.position.z += gameSpeed * deltaMultiplier;
 
     // Move halo with orb
@@ -766,30 +838,26 @@ function updateObstacles(deltaMultiplier) {
       obs.userData.halo.position.z = obs.position.z - 0.2;
     }
 
-    const foxZ = foxPlayer.position.z;
-    const obsZ = obs.position.z;
-    const collisionRange = 0.9;
+    // --- Collision detection (distance-based, no phasing) ---
+    const dx = obs.position.x - foxPos.x;
+    const dz = obs.position.z - foxPos.z;
+    const distSq = dx * dx + dz * dz;
 
-    if (obsZ >= foxZ - collisionRange && obsZ <= foxZ + collisionRange) {
-      if (obs.userData.lane === currentLane) {
-        const foxX = foxPlayer.position.x;
-        const obsX = obs.position.x;
-        const lateralRange = 0.9;
-        if (Math.abs(foxX - obsX) < lateralRange) {
-          doGameOver();
-          return;
-        }
-      }
+    if (distSq < collisionRadiusSq) {
+      doGameOver();
+      return;
     }
 
-    if (obsZ > foxZ + 2 && !obs.userData.scored) {
+    // --- Scoring: once orb safely passes behind the fox ---
+    if (!obs.userData.scored && obs.position.z > foxPos.z + 1.0) {
       obs.userData.scored = true;
       score += 10;
       const scoreEl = document.getElementById("score-display");
       if (scoreEl) scoreEl.textContent = `Score: ${score}`;
     }
 
-    if (obsZ > 80) {
+    // --- Cleanup ---
+    if (obs.position.z > 80) {
       try {
         scene.remove(obs);
         if (obs.userData.halo) {
@@ -800,14 +868,19 @@ function updateObstacles(deltaMultiplier) {
     }
   }
 
+  // --- Spawning logic with spacing based on difficulty ---
   obstacleSpawnTimer++;
-  const spawnRate = Math.max(
-    18,
-    70 - Math.floor((gameSpeed - BASE_GAME_SPEED) * 140)
-  );
+
+  const baseSpawnRate = 60; // frames between spawns at easiest
+  const minSpawnRate = 18;  // fastest spawn at hardest
+  const spawnRate =
+    baseSpawnRate - difficultyFactor * (baseSpawnRate - minSpawnRate);
 
   if (obstacleSpawnTimer >= spawnRate) {
-    createObstacle(Math.floor(Math.random() * 3));
+    const lanesToBlock = chooseSpawnPattern(difficultyFactor);
+    for (const lane of lanesToBlock) {
+      createObstacle(lane);
+    }
     obstacleSpawnTimer = 0;
   }
 }
@@ -890,6 +963,7 @@ function onTouchEnd(e) {
     moveFox(currentLane + 1);
   }
 }
+// === SECTION 4 / 4 ===
 
 /* ===========================
    INIT + ANIMATE
@@ -993,7 +1067,6 @@ function updateFloorAndBackground() {
     scene.fog.color = interpolatedFogColor;
   }
 }
-// === SECTION 4 / 4 ===
 
 function animate() {
   requestAnimationFrame(animate);
