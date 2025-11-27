@@ -1,3 +1,5 @@
+// === SECTION 1 / 4 ===
+
 /* ===========================
    FIREBASE SETUP
    =========================== */
@@ -321,6 +323,7 @@ let bgm = null;
 
 function initializeMusic() {
   bgm = new Audio(MUSIC_URL);
+  bgm.crossOrigin = "anonymous"; // CORS fix for GitHub Pages
   bgm.loop = true;
   bgm.volume = 0.7;
 }
@@ -350,6 +353,8 @@ const scoreDisplay = document.getElementById("score-display");
 const gameOverScreen = document.getElementById("game-over-screen");
 const finalScoreEl = document.getElementById("final-score");
 const textureLoader = new THREE.TextureLoader();
+textureLoader.setCrossOrigin("anonymous"); // CORS fix for all textures
+// === SECTION 2 / 4 ===
 
 /* ===========================
    VIDEO BACKGROUND
@@ -359,6 +364,7 @@ function setupVideoBackground() {
   if (!scene) return;
   try {
     const vid = document.createElement("video");
+    vid.crossOrigin = "anonymous";        // CORS fix for GitHub Pages
     vid.src = BACKGROUND_VIDEO_URL;
     vid.loop = true;
     vid.muted = true;
@@ -592,7 +598,6 @@ function updateRibbonTrail(deltaMultiplier) {
 
   // We use lane direction and curve direction to compute sideways vector
   const laneDir = new THREE.Vector3(0, 0, 1);
-  const up = new THREE.Vector3(0, 1, 0);
 
   for (let i = 0; i < TRAIL_SEGMENTS - 1; i++) {
     const tSeg = i / (TRAIL_SEGMENTS - 1); // 0 at head, 1 at tail
@@ -675,6 +680,7 @@ function updateRibbonTrail(deltaMultiplier) {
   if (trailGeometry.boundingSphere) trailGeometry.boundingSphere = null;
   trailGeometry.computeBoundingSphere();
 }
+// === SECTION 3 / 4 ===
 
 /* ===========================
    GAME CONTROL
@@ -987,6 +993,7 @@ function updateFloorAndBackground() {
     scene.fog.color = interpolatedFogColor;
   }
 }
+// === SECTION 4 / 4 ===
 
 function animate() {
   requestAnimationFrame(animate);
@@ -1040,4 +1047,3 @@ window.addEventListener("load", () => {
   init();
   animate();
 });
-
