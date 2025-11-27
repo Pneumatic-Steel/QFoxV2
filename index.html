@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quantum Fox: Endless Runner</title>
+
+  <!-- Tailwind + libs -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/23.1.1/tween.umd.js"></script>
+
+  <!-- Our styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="ui-container">
+    <div id="score-display" class="info-box">Score: 0</div>
+    <div id="high-score-display" class="info-box">High Score: 0</div>
+    <div class="info-box text-sm">A / D (or Arrows) to Switch Lanes</div>
+  </div>
+
+  <div id="touch-indicator">Tap Left / Right to Switch Lanes</div>
+
+  <div id="game-container"></div>
+
+  <div id="game-over-screen">
+    <h2 class="game-over-title">Game Over</h2>
+    <p class="game-over-subtext">
+      Final Distance Run:
+      <span id="final-score" class="final-score-value">0</span>
+    </p>
+
+    <!-- High score initials (5 letters) -->
+    <div id="initials-form">
+      <p class="initials-title">NEW HIGH SCORE!</p>
+      <input
+        type="text"
+        id="initials-input"
+        maxlength="5"
+        placeholder="_____"
+        autocomplete="off"
+      />
+      <button id="submit-score-btn">SUBMIT</button>
+    </div>
+
+    <div class="button-group">
+      <button id="restart-btn" class="restart-button">RESTART</button>
+      <button id="leaderboard-btn" class="restart-button">LEADERBOARD</button>
+    </div>
+
+    <p class="user-id-line">
+      User ID: <span id="user-id-display">Anonymous</span>
+    </p>
+  </div>
+
+  <div id="leaderboard-screen">
+    <button id="close-leaderboard" class="close-button close-leaderboard">
+      ✕ CLOSE
+    </button>
+    <h2 class="leaderboard-title">TOP 100 RUNNERS</h2>
+
+    <div id="leaderboard-content">
+      <div class="leaderboard-entry header">
+        <span class="rank">#</span>
+        <span class="initials">INITIALS</span>
+        <span class="score">SCORE</span>
+      </div>
+      <div id="leaderboard-list">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Our game logic (ES module so Firebase imports work) -->
+  <script type="module" src="game.js"></script>
+</body>
+</html>
