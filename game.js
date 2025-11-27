@@ -306,12 +306,12 @@ initFirebase();
    ASSET URLS
    =========================== */
 
-const FOX_HEAD_URL = "head.png";
-const OBSTACLE_URL = "orb.png";
-const HALO_URL = "halo.png";
-const FLOOR_IMAGE_URL = "floor.png";
-const BACKGROUND_VIDEO_URL = "background.mp4";
-const MUSIC_URL = "music.wav";
+const FOX_HEAD_URL = "assets/head.png";
+const OBSTACLE_URL = "assets/orb.png";
+const HALO_URL = "assets/halo.png";
+const FLOOR_IMAGE_URL = "assets/floor.png";
+const BACKGROUND_VIDEO_URL = "assets/background.mp4";
+const MUSIC_URL = "assets/music.wav";
 
 /* ===========================
    GLOBALS
@@ -1040,3 +1040,4 @@ window.addEventListener("load", () => {
   init();
   animate();
 });
+
