@@ -628,8 +628,8 @@ function updateRibbonTrail(deltaMultiplier) {
 
     // Push ribbon BEHIND the fox along +Z, stretching farther for tail
     const stretch = TRAIL_LENGTH * tSeg;
-    leftPos.z += (TRAIL_Z_OFFSET + stretch);
-    rightPos.z += (TRAIL_Z_OFFSET + stretch);
+    leftPos.y += (TRAIL_Z_OFFSET + stretch);
+    rightPos.y += (TRAIL_Z_OFFSET + stretch);
 
     const vi = i * 2;
 
@@ -1120,3 +1120,4 @@ window.addEventListener("load", () => {
   init();
   animate();
 });
+
