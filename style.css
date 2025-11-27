@@ -1,0 +1,252 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #0d1117;
+  color: #f3f4f6;
+  font-family: Inter, system-ui, Arial;
+}
+
+canvas {
+  display: block;
+}
+
+#ui-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 20px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.info-box {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: 2px solid #3b82f6;
+  min-width: 140px;
+  text-align: center;
+}
+
+#touch-indicator {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: #fcd34d;
+  border: 2px solid #3b82f6;
+  pointer-events: none;
+  font-weight: 700;
+}
+
+#game-over-screen,
+#leaderboard-screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  z-index: 30;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+  color: #f3f4f6;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.4s;
+  text-align: center;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.button-group {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  pointer-events: auto;
+}
+
+.restart-button,
+.close-button {
+  padding: 12px 22px;
+  border-radius: 0.5rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  background: #fcd34d;
+  color: #111827;
+  transition: all 0.2s;
+}
+
+.restart-button:hover,
+.close-button:hover {
+  background: #fbbf24;
+  transform: translateY(-2px);
+}
+
+#initials-form {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #fcd34d;
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0% {
+    border-color: #fcd34d;
+    box-shadow: 0 0 0 0 rgba(252, 211, 77, 0.4);
+  }
+  70% {
+    border-color: #fcd34d;
+    box-shadow: 0 0 0 10px rgba(252, 211, 77, 0);
+  }
+  100% {
+    border-color: #fcd34d;
+    box-shadow: 0 0 0 0 rgba(252, 211, 77, 0);
+  }
+}
+
+#initials-input {
+  background: #111827;
+  border: 2px solid #4b5563;
+  color: #10b981;
+  font-size: 2.2rem;
+  text-align: center;
+  width: 260px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+  font-family: monospace;
+  letter-spacing: 0.2em;
+}
+
+#initials-input:focus {
+  outline: none;
+  border-color: #10b981;
+}
+
+#submit-score-btn {
+  background: #10b981;
+  color: #064e3b;
+  padding: 10px 30px;
+  border-radius: 6px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+
+#submit-score-btn:disabled {
+  background: #4b5563;
+  cursor: not-allowed;
+  transform: none;
+}
+
+#leaderboard-content {
+  width: 90%;
+  max-width: 600px;
+  margin-top: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 10px;
+  padding: 20px;
+  border: 2px solid #10b981;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.leaderboard-entry {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed #374151;
+  font-size: 1.1rem;
+}
+
+.leaderboard-entry:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-entry.header {
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #fcd34d;
+  border-bottom: 2px solid #fcd34d;
+  margin-bottom: 10px;
+}
+
+.leaderboard-entry .rank {
+  width: 10%;
+  text-align: center;
+  color: #10b981;
+}
+
+.leaderboard-entry .initials {
+  width: 30%;
+  text-align: left;
+}
+
+.leaderboard-entry .score {
+  width: 30%;
+  text-align: right;
+}
+
+/* Extra helper classes used in HTML headings/buttons */
+
+.game-over-title {
+  font-size: 3.25rem;
+  color: #ef4444;
+  margin: 0 0 0.6rem 0;
+  font-weight: 900;
+}
+
+.game-over-subtext {
+  font-size: 1.25rem;
+  margin: 0 0 1rem 0;
+}
+
+.final-score-value {
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+.initials-title {
+  font-size: 1.2rem;
+  color: #fcd34d;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.user-id-line {
+  margin-top: 12px;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.leaderboard-title {
+  font-size: 3rem;
+  color: #10b981;
+  margin-bottom: 20px;
+  font-weight: 900;
+}
+
+.close-leaderboard {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 8px 16px;
+  font-size: 1.1rem;
+}
